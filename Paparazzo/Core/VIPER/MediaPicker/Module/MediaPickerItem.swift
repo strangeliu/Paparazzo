@@ -11,7 +11,7 @@ public final class MediaPickerItem: Equatable {
     public let image: ImageSource
     public let source: Source
     
-    let identifier: String
+    public let identifier: String
     
     let originalItem: MediaPickerItem?
     

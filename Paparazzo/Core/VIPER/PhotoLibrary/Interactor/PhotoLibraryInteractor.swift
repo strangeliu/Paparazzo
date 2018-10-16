@@ -22,9 +22,9 @@ public struct PhotoLibraryItem: Equatable {
     
     public var image: ImageSource
     
-    var identifier: String
+    public var identifier: String
     
-    init(identifier: String, image: ImageSource) {
+    public init(identifier: String, image: ImageSource) {
         self.identifier = identifier
         self.image = image
     }

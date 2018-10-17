@@ -41,6 +41,10 @@ final class PhotoLibraryTitleView: UIView {
         setNeedsLayout()
     }
     
+    func setLabelColor(_ color: UIColor) {
+        label.textColor = color
+    }
+    
     func setIcon(_ icon: UIImage?) {
         iconView.image = icon
         setNeedsLayout()

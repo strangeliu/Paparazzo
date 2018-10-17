@@ -132,9 +132,16 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
     
     func setTheme(_ theme: ThemeType) {
         self.theme = theme
+        backgroundColor = theme.photoLibraryBackgroundColor
+        collectionView.backgroundColor = theme.photoLibraryBackgroundColor
         
+        titleView.backgroundColor = theme.photoLibraryTopbarBackgroundColor
+        titleView.setLabelColor(theme.photoLibraryTopbarTitleColor)
         titleView.setLabelFont(theme.photoLibraryTitleFont)
         titleView.setIcon(theme.photoLibraryAlbumsDisclosureIcon)
+        albumsTableView.backgroundColor = theme.photoLibraryBackgroundColor
+        albumsTableView.photoLibraryAlbumListDefaultTextColor = theme.photoLibraryAlbumListDefaultTextColor
+        albumsTableView.photoLibraryAlbumListSelectedTextColor = theme.photoLibraryAlbumListSelectedTextColor
         
         accessDeniedView.setTheme(theme)
         

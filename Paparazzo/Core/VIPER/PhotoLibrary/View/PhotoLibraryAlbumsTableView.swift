@@ -16,6 +16,16 @@ final class PhotoLibraryAlbumsTableView: UIView, UITableViewDataSource, UITableV
     private let separatorHeight: CGFloat = 1
     private let minInsets = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
     
+    override var backgroundColor: UIColor? {
+        didSet {
+            topSeparator.backgroundColor = backgroundColor
+            tableView.backgroundColor = backgroundColor
+        }
+    }
+    
+    var photoLibraryAlbumListDefaultTextColor = UIColor.RGB(red: 51, green: 51, blue: 51)
+    var photoLibraryAlbumListSelectedTextColor = UIColor.RGB(red: 0, green: 170, blue: 255)
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: .zero)
@@ -80,7 +90,10 @@ final class PhotoLibraryAlbumsTableView: UIView, UITableViewDataSource, UITableV
         
         cell.setCellData(cellData)
         cell.isSelected = (cellData.identifier == selectedAlbumId)
-        
+        cell.backgroundColor = backgroundColor
+        cell.contentView.backgroundColor = backgroundColor
+        cell.setDefaultLabelColor(photoLibraryAlbumListDefaultTextColor)
+        cell.setSelectedLabelColor(photoLibraryAlbumListSelectedTextColor)
         if let cellLabelFont = cellLabelFont {
             cell.setLabelFont(cellLabelFont)
         }

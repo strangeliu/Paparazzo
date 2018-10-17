@@ -62,6 +62,13 @@ public struct PaparazzoUITheme:
     public var photoLibraryPlaceholderFont = UIFont.systemFont(ofSize: 17)
     public var photoLibraryPlaceholderColor = UIColor.gray
     
+    public var photoLibraryBackgroundColor = UIColor.white
+    public var photoLibraryTopbarBackgroundColor = UIColor.white
+    public var photoLibraryTopbarTitleColor = UIColor.black
+    public var photoLibraryAlbumBackgroundColor = UIColor.white
+    public var photoLibraryAlbumListDefaultTextColor = UIColor.RGB(red: 51, green: 51, blue: 51)
+    public var photoLibraryAlbumListSelectedTextColor = UIColor.RGB(red: 0, green: 170, blue: 255)
+    
     // MARK: - PhotoLibraryV2UITheme
     public var continueButtonTitleColor = UIColor(red: 0, green: 170.0/255, blue: 1, alpha: 1)
     public var continueButtonTitleHighlightedColor = UIColor(red: 0, green: 152.0/255, blue: 229.0/255, alpha: 1)

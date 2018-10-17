@@ -12,4 +12,11 @@ public protocol PhotoLibraryUITheme: AccessDeniedViewTheme {
     var photoLibraryAlbumCellFont: UIFont { get }
     var photoLibraryPlaceholderFont: UIFont { get }
     var photoLibraryPlaceholderColor: UIColor { get }
+    
+    var photoLibraryBackgroundColor: UIColor { get }
+    var photoLibraryTopbarBackgroundColor: UIColor { get }
+    var photoLibraryTopbarTitleColor: UIColor { get }
+    var photoLibraryAlbumBackgroundColor: UIColor { get }
+    var photoLibraryAlbumListDefaultTextColor: UIColor { get }
+    var photoLibraryAlbumListSelectedTextColor: UIColor { get }
 }

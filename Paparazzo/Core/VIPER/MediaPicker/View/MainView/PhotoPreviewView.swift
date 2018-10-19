@@ -17,6 +17,12 @@ final class PhotoPreviewView: UIView, UICollectionViewDataSource, UICollectionVi
     private let photoCellReuseId = "PhotoCell"
     private let cameraCellReuseId = "CameraCell"
     
+    override var backgroundColor: UIColor? {
+        didSet {
+            collectionView.backgroundColor = backgroundColor
+        }
+    }
+    
     // MARK: - Init
     
     init() {

@@ -117,8 +117,14 @@ final class MediaPickerView: UIView, ThemeConfigurable {
         photoControlsView.setTheme(theme)
         thumbnailRibbonView.setTheme(theme)
         
+        backgroundColor = theme.mediaPickerBackgroundColor
+        photoPreviewView.backgroundColor = theme.mediaPickerBackgroundColor
+        photoControlsView.backgroundColor = theme.mediaPickerBackgroundColor
+        photoControlsView.tintColor = theme.mediaPickerControlTintColor
+        
         continueButton.setTitleColor(theme.cameraContinueButtonTitleColor, for: .normal)
         continueButton.titleLabel?.font = theme.cameraContinueButtonTitleFont
+        closeButton.tintColor = theme.cameraContinueButtonTitleColor
         
         continueButton.setTitleColor(
             theme.cameraContinueButtonTitleColor,
@@ -413,7 +419,7 @@ final class MediaPickerView: UIView, ThemeConfigurable {
             photoTitleLabel.textColor = .white
             photoTitleLabel.layer.shadowOpacity = 0.5
         case .dark, .light:
-            photoTitleLabel.textColor = .black
+            photoTitleLabel.textColor = theme?.mediaPickerControlTintColor
             photoTitleLabel.layer.shadowOpacity = 0
         }
     }
@@ -423,7 +429,7 @@ final class MediaPickerView: UIView, ThemeConfigurable {
     }
     
     func setCloseButtonImage(_ image: UIImage?) {
-        closeButton.setImage(image, for: .normal)
+        closeButton.setImage(image?.withRenderingMode(.alwaysTemplate), for: .normal)
     }
     
     func setContinueButtonTitle(_ title: String) {
@@ -534,7 +540,7 @@ final class MediaPickerView: UIView, ThemeConfigurable {
         
         photoControlsView.frame = cameraControlsView.frame
         
-        thumbnailRibbonView.backgroundColor = UIColor.white
+        thumbnailRibbonView.backgroundColor = backgroundColor
         thumbnailRibbonView.contentInsets = thumbnailRibbonInsets
         thumbnailRibbonView.layout(
             left: bounds.left,
@@ -602,7 +608,7 @@ final class MediaPickerView: UIView, ThemeConfigurable {
             ? thumbnailHeightForSmallScreen + thumbnailRibbonInsets.top + thumbnailRibbonInsets.bottom
             : bottomPanelHeight - controlsHeight
         
-        thumbnailRibbonView.backgroundColor = UIColor.white.withAlphaComponent(thumbnailRibbonAlpha)
+        thumbnailRibbonView.backgroundColor = backgroundColor?.withAlphaComponent(thumbnailRibbonAlpha)
         thumbnailRibbonView.contentInsets = thumbnailRibbonInsets
         thumbnailRibbonView.layout(
             left: bounds.left,

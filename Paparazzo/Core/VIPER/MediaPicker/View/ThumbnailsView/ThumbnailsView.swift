@@ -36,6 +36,12 @@ final class ThumbnailsView: UIView, UICollectionViewDataSource, MediaRibbonLayou
     private let photoCellReuseId = "PhotoCell"
     private let cameraCellReuseId = "CameraCell"
     
+    override var backgroundColor: UIColor? {
+        didSet {
+            collectionView.backgroundColor = backgroundColor
+        }
+    }
+    
     // MARK: - Init
     
     init() {

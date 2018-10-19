@@ -30,4 +30,7 @@ public protocol MediaPickerRootModuleUITheme: AccessDeniedViewTheme {
     var cameraContinueButtonTitleFont: UIFont { get }
     
     var infoMessageFont: UIFont { get }
+    
+    var mediaPickerBackgroundColor: UIColor { get }
+    var mediaPickerControlTintColor: UIColor { get }
 }

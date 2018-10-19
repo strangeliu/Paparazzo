@@ -47,6 +47,9 @@ public struct PaparazzoUITheme:
 
     public var infoMessageFont = UIFont.systemFont(ofSize: 14)
     
+    public var mediaPickerBackgroundColor = UIColor.white
+    public var mediaPickerControlTintColor = UIColor.black
+    
     // MARK: - PhotoLibraryUITheme
     
     public var photoLibraryTitleFont = UIFont.boldSystemFont(ofSize: 18)

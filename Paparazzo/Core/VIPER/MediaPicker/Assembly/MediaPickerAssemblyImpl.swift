@@ -16,6 +16,7 @@ public final class MediaPickerAssemblyImpl: BasePaparazzoAssembly, MediaPickerAs
     public func module(
         data: MediaPickerData,
         overridenTheme: PaparazzoUITheme?,
+        isMetalEnabled: Bool,
         configure: (MediaPickerModule) -> ())
         -> UIViewController
     {
@@ -25,6 +26,8 @@ public final class MediaPickerAssemblyImpl: BasePaparazzoAssembly, MediaPickerAs
             selectedItem: data.selectedItem,
             maxItemsCount: data.maxItemsCount,
             cropCanvasSize: data.cropCanvasSize,
+            cameraEnabled: data.cameraEnabled,
+            photoLibraryEnabled: data.photoLibraryEnabled,
             deviceOrientationService: serviceFactory.deviceOrientationService(),
             latestLibraryPhotoProvider: serviceFactory.photoLibraryLatestPhotoProvider()
         )
@@ -39,7 +42,8 @@ public final class MediaPickerAssemblyImpl: BasePaparazzoAssembly, MediaPickerAs
         let cameraAssembly = assemblyFactory.cameraAssembly()
         let (cameraView, cameraModuleInput) = cameraAssembly.module(
             initialActiveCameraType: data.initialActiveCameraType,
-            overridenTheme: overridenTheme
+            overridenTheme: overridenTheme,
+            isMetalEnabled: isMetalEnabled
         )
         
         let presenter = MediaPickerPresenter(

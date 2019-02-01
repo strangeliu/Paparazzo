@@ -1,7 +1,7 @@
 import Marshroute
 import Paparazzo
 
-protocol ExampleRouter: class, RouterFocusable, RouterDismissable {
+protocol ExampleRouter: RouterFocusable, RouterDismissable {
 
     func showMediaPicker(
         data: MediaPickerData,
@@ -18,6 +18,13 @@ protocol ExampleRouter: class, RouterFocusable, RouterDismissable {
         selectedItems: [PhotoLibraryItem],
         maxSelectedItemsCount: Int?,
         configure: (PhotoLibraryModule) -> ()
+    )
+    
+    func showPhotoLibraryV2(
+        mediaPickerData: MediaPickerData,
+        selectedItems: [PhotoLibraryItem],
+        maxSelectedItemsCount: Int?,
+        configure: (PhotoLibraryV2Module) -> ()
     )
     
     func showScanner(

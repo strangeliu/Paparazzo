@@ -68,6 +68,26 @@ final class ExampleRouterImpl: BaseRouter, ExampleRouter {
         }
     }
     
+    func showPhotoLibraryV2(
+        mediaPickerData: MediaPickerData,
+        selectedItems: [PhotoLibraryItem],
+        maxSelectedItemsCount: Int?,
+        configure: (PhotoLibraryV2Module) -> ()
+    ) {
+        presentModalNavigationControllerWithRootViewControllerDerivedFrom { routerSeed in
+            
+            let assembly = mediaPickerAssemblyFactory.photoLibraryV2Assembly()
+            
+            return assembly.module(
+                mediaPickerData: mediaPickerData,
+                selectedItems: selectedItems,
+                maxSelectedItemsCount: maxSelectedItemsCount,
+                routerSeed: routerSeed,
+                configure: configure
+            )
+        }
+    }
+    
     func showScanner(
         data: ScannerData,
         configure: (ScannerModule) -> ()

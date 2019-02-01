@@ -3,6 +3,7 @@ import UIKit
 public struct PaparazzoUITheme:
     MediaPickerRootModuleUITheme,
     PhotoLibraryUITheme,
+    PhotoLibraryV2UITheme,
     ImageCroppingUITheme,
     MaskCropperUITheme,
     ScannerRootModuleUITheme
@@ -22,6 +23,7 @@ public struct PaparazzoUITheme:
     public var cropPhotoIcon = PaparazzoUITheme.image(named: "crop")
     public var returnToCameraIcon = PaparazzoUITheme.image(named: "camera")
     public var closeCameraIcon = PaparazzoUITheme.image(named: "bt-close")
+    public var backIcon = PaparazzoUITheme.image(named: "bt-back")
     public var flashOnIcon = PaparazzoUITheme.image(named: "light_on")
     public var flashOffIcon = PaparazzoUITheme.image(named: "light_off")
     public var cameraToggleIcon = PaparazzoUITheme.image(named: "back_front")
@@ -60,6 +62,12 @@ public struct PaparazzoUITheme:
     public var photoLibraryPlaceholderFont = UIFont.systemFont(ofSize: 17)
     public var photoLibraryPlaceholderColor = UIColor.gray
     
+    // MARK: - PhotoLibraryV2UITheme
+    public var continueButtonTitleColor = UIColor(red: 0, green: 170.0/255, blue: 1, alpha: 1)
+    public var continueButtonTitleHighlightedColor = UIColor(red: 0, green: 152.0/255, blue: 229.0/255, alpha: 1)
+    public var closeIcon = PaparazzoUITheme.image(named: "bt-close")
+    public var continueButtonTitleFont = UIFont.systemFont(ofSize: 17)
+    
     // MARK: - ImageCroppingUITheme
     
     public var rotationIcon = PaparazzoUITheme.image(named: "rotate")
@@ -76,11 +84,9 @@ public struct PaparazzoUITheme:
     
     public var maskCropperDiscardPhotoIcon = PaparazzoUITheme.image(named: "discard")
     public var maskCropperConfirmPhotoIcon = PaparazzoUITheme.image(named: "confirm")
+    public var cameraIcon = PaparazzoUITheme.image(named: "camera")
 
     // MARK: - Private
-
-    private class BundleId {}
-
     private static func image(named name: String) -> UIImage? {
         return UIImage(named: name, in: Resources.bundle, compatibleWith: nil)
     }

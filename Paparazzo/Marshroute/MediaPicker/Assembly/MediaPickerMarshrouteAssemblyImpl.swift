@@ -18,6 +18,7 @@ public final class MediaPickerMarshrouteAssemblyImpl: BasePaparazzoAssembly, Med
         data: MediaPickerData,
         overridenTheme: PaparazzoUITheme?,
         routerSeed: RouterSeed,
+        isMetalEnabled: Bool,
         configure: (MediaPickerModule) -> ())
         -> UIViewController
     {
@@ -27,6 +28,8 @@ public final class MediaPickerMarshrouteAssemblyImpl: BasePaparazzoAssembly, Med
             selectedItem: data.selectedItem,
             maxItemsCount: data.maxItemsCount,
             cropCanvasSize: data.cropCanvasSize,
+            cameraEnabled: data.cameraEnabled,
+            photoLibraryEnabled: data.photoLibraryEnabled,
             deviceOrientationService: serviceFactory.deviceOrientationService(),
             latestLibraryPhotoProvider: serviceFactory.photoLibraryLatestPhotoProvider()
         )
@@ -39,7 +42,8 @@ public final class MediaPickerMarshrouteAssemblyImpl: BasePaparazzoAssembly, Med
         let cameraAssembly = assemblyFactory.cameraAssembly()
         let (cameraView, cameraModuleInput) = cameraAssembly.module(
             initialActiveCameraType: data.initialActiveCameraType,
-            overridenTheme: overridenTheme
+            overridenTheme: overridenTheme,
+            isMetalEnabled: isMetalEnabled
         )
         
         let presenter = MediaPickerPresenter(

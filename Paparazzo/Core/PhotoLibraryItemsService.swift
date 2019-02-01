@@ -7,8 +7,14 @@ protocol PhotoLibraryItemsService {
     func observeEvents(in: PhotoLibraryAlbum, handler: @escaping (_ event: PhotoLibraryAlbumEvent) -> ())
 }
 
+enum PhotosOrder {
+    case normal
+    case reversed
+}
+
 final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PHPhotoLibraryChangeObserver {
     
+    private let photosOrder: PhotosOrder
     private let photoLibrary = PHPhotoLibrary.shared()
     private var fetchResults = [PhotoLibraryFetchResult]()
     
@@ -22,6 +28,9 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
     private lazy var imageManager = PHImageManager()
     
     // MARK: - Init
+    init(photosOrder: PhotosOrder = .normal) {
+        self.photosOrder = photosOrder
+    }
     
     deinit {
         photoLibrary.unregisterChangeObserver(self)
@@ -203,76 +212,177 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
     private func callObserverHandler(changes phChanges: PHFetchResultChangeDetails<PHAsset>?) {
         if let phChanges = phChanges, phChanges.hasIncrementalChanges {
             onAlbumEvent?(.incrementalChanges(photoLibraryChanges(from: phChanges)))
+        } else if let observedAlbum = observedAlbum {
+            onAlbumEvent?(.fullReload(photoLibraryItems(from: observedAlbum.fetchResult)))
         } else {
-            onAlbumEvent?(.fullReload(photoLibraryItems(from: assetsFromFetchResult())))
+            onAlbumEvent?(.fullReload([]))
         }
     }
     
-    private func assetsFromFetchResult() -> [PHAsset] {
-        var images = [PHAsset]()
-        observedAlbum?.fetchResult.enumerateObjects(using: { asset, _, _ in
-            images.append(asset)
-        })
-        return images
-    }
-    
-    private func photoLibraryItems(from assets: [PHAsset]) -> [PhotoLibraryItem] {
-        return assets.map(photoLibraryItem)
+    private func photoLibraryItems(from fetchResult: PHFetchResult<PHAsset>) -> [PhotoLibraryItem] {
+        
+        let indexes = 0 ..< fetchResult.count
+        
+        return indexes.map { indexInFetchResult in
+            
+            let index: Int = {
+                switch photosOrder {
+                case .normal:
+                    return indexInFetchResult
+                case .reversed:
+                    return indexes.upperBound - indexInFetchResult - 1
+                }
+            }()
+            
+            return PhotoLibraryItem(
+                image: PHAssetImageSource(
+                    fetchResult: fetchResult,
+                    index: index,
+                    imageManager: imageManager
+                )
+            )
+        }
     }
     
     private func photoLibraryItem(from asset: PHAsset) -> PhotoLibraryItem {
         return PhotoLibraryItem(
-            identifier: asset.localIdentifier,
             image: PHAssetImageSource(asset: asset, imageManager: imageManager)
         )
     }
     
-    private func photoLibraryChanges(from changes: PHFetchResultChangeDetails<PHAsset>)
+    // TODO: extract to a separate class (e.g. PhotoLibraryChangesBuilder) and write tests
+    func photoLibraryChanges(from changes: PHFetchResultChangeDetails<PHAsset>)
         -> PhotoLibraryChanges
     {
-        var assets = [PHAsset]()
+        return PhotoLibraryChanges(
+            removedIndexes: removedIndexes(from: changes),
+            insertedItems: insertedObjects(from: changes),
+            updatedItems: updatedObjects(from: changes),
+            movedIndexes: movedIndexes(from: changes),
+            itemsAfterChanges: photoLibraryItems(from: changes.fetchResultAfterChanges)
+        )
+    }
+    
+    private func removedIndexes(from changes: PHFetchResultChangeDetails<PHAsset>)
+        -> IndexSet
+    {
+        let assetsCountBeforeChanges = changes.fetchResultBeforeChanges.count
+        var removedIndexes = IndexSet()
         
-        var insertedObjects = [(index: Int, item: PhotoLibraryItem)]()
-        var insertedObjectIndex = changes.insertedObjects.count - 1
+        switch photosOrder {
+        case .normal:
+            changes.removedIndexes?.reversed().forEach { index in
+                removedIndexes.insert(index)
+            }
+        case .reversed:
+            changes.removedIndexes?.forEach { index in
+                removedIndexes.insert(assetsCountBeforeChanges - index - 1)
+            }
+        }
         
-        var updatedObjects = [(index: Int, item: PhotoLibraryItem)]()
-        var updatedObjectIndex = changes.changedObjects.count - 1
+        return removedIndexes
+    }
+    
+    private func insertedObjects(from changes: PHFetchResultChangeDetails<PHAsset>)
+        -> [(index: Int, item: PhotoLibraryItem)]
+    {
+        guard let insertedIndexes = changes.insertedIndexes else { return [] }
         
+        let objectsCountAfterRemovalsAndInsertions =
+            changes.fetchResultBeforeChanges.count - changes.removedObjects.count + changes.insertedObjects.count
+        
+        /*
+         To clarify the code below:
+         
+         `insertionIndex` — index used to map `changes.insertedIndexes` to `changes.insertedObjects`.
+         
+         `targetAssetIndex` — target index at which asset has been inserted to photo library
+             as reported to us by PhotoKit.
+         
+         `finalAssetIndex` — actual target index at which collection view cell for the asset will be inserted.
+             This is the same as `targetAssetIndex` if `photosOrder` is `.normal`.
+             However if `photosOrder` is `.reversed` we need to do some calculation.
+         */
+        return insertedIndexes.enumerated().map {
+            insertionIndex, targetAssetIndex -> (index: Int, item: PhotoLibraryItem) in
+            
+            let asset = changes.insertedObjects[insertionIndex]
+            
+            let finalAssetIndex: Int = {
+                switch photosOrder {
+                case .normal:
+                    return targetAssetIndex
+                case .reversed:
+                    return objectsCountAfterRemovalsAndInsertions - targetAssetIndex - 1
+                }
+            }()
+            
+            return (index: finalAssetIndex, item: photoLibraryItem(from: asset))
+        }
+    }
+    
+    private func updatedObjects(from changes: PHFetchResultChangeDetails<PHAsset>)
+        -> [(index: Int, item: PhotoLibraryItem)]
+    {
+        guard let changedIndexes = changes.changedIndexes else { return [] }
+        
+        let objectsCountAfterRemovalsAndInsertions =
+            changes.fetchResultBeforeChanges.count - changes.removedObjects.count + changes.insertedObjects.count
+        
+        /*
+         To clarify the code below:
+         
+         `changeIndex` — index used to map `changes.changedIndexes` to `changes.changedObjects`.
+
+         `assetIndex` — index at which asset has been updated in photo library as reported to us by PhotoKit.
+         
+         `finalAssetIndex` — actual index of a collection view cell for the asset that will be updated.
+             This is the same as `assetIndex` if `photosOrder` is `.normal`.
+             However if `photosOrder` is `.reversed` we need to do some calculation.
+         */
+        return changedIndexes.enumerated().map { changeIndex, assetIndex -> (index: Int, item: PhotoLibraryItem) in
+            
+            let asset = changes.changedObjects[changeIndex]
+            
+            let finalAssetIndex: Int = {
+                switch photosOrder {
+                case .normal:
+                    return assetIndex
+                case .reversed:
+                    return objectsCountAfterRemovalsAndInsertions - assetIndex - 1
+                }
+            }()
+            
+            return (index: finalAssetIndex, item: photoLibraryItem(from: asset))
+        }
+    }
+    
+    private func movedIndexes(from changes: PHFetchResultChangeDetails<PHAsset>)
+        -> [(from: Int, to: Int)]
+    {
         var movedIndexes = [(from: Int, to: Int)]()
         
-        changes.fetchResultBeforeChanges.enumerateObjects(using: { object, _, _ in
-            assets.append(object)
-        })
-        
-        changes.removedIndexes?.reversed().forEach { index in
-            assets.remove(at: index)
-        }
-        
-        changes.insertedIndexes?.reversed().forEach { index in
-            guard insertedObjectIndex >= 0 else { return }
-            let asset = changes.insertedObjects[insertedObjectIndex]
-            insertedObjects.append((index: index, item: photoLibraryItem(from: asset)))
-            insertedObjectIndex -= 1
-        }
-        
-        changes.changedIndexes?.reversed().forEach { index in
-            guard updatedObjectIndex >= 0 else { return }
-            let asset = changes.changedObjects[updatedObjectIndex]
-            updatedObjects.append((index: index, item: self.photoLibraryItem(from: asset)))
-            updatedObjectIndex -= 1
-        }
+        let objectsCountAfterRemovalsAndInsertions =
+            changes.fetchResultBeforeChanges.count - changes.removedObjects.count + changes.insertedObjects.count
         
         changes.enumerateMoves { from, to in
-            movedIndexes.append((from: from, to: to))
+            
+            let (realFrom, realTo): (Int, Int) = {
+                switch self.photosOrder {
+                case .normal:
+                    return (from, to)
+                case .reversed:
+                    return (
+                        objectsCountAfterRemovalsAndInsertions - from - 1,
+                        objectsCountAfterRemovalsAndInsertions - to - 1
+                    )
+                }
+            }()
+            
+            movedIndexes.append((from: realFrom, to: realTo))
         }
         
-        return PhotoLibraryChanges(
-            removedIndexes: changes.removedIndexes ?? IndexSet(),
-            insertedItems: insertedObjects,
-            updatedItems: updatedObjects,
-            movedIndexes: movedIndexes,
-            itemsAfterChanges: photoLibraryItems(from: assets)
-        )
+        return movedIndexes
     }
     
     private func allAlbums() -> [PhotoLibraryAlbum] {
@@ -330,7 +440,6 @@ final class PhotoLibraryAlbum: Equatable {
         
         let fetchOptions = PHFetchOptions()
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
-        
         if #available(iOS 9.0, *) {
             fetchOptions.includeAssetSourceTypes = [.typeUserLibrary, .typeCloudShared, .typeiTunesSynced]
         }

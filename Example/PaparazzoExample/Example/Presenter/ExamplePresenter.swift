@@ -34,6 +34,7 @@ final class ExamplePresenter {
         view?.setMediaPickerButtonTitle("Media Picker")
         view?.setMaskCropperButtonTitle("Mask Cropper")
         view?.setPhotoLibraryButtonTitle("Photo Library")
+        view?.setPhotoLibraryV2ButtonTitle("Photo Library version 2")
         view?.setScannerButtonTitle("Scanner")
         
         view?.onShowMediaPickerButtonTap = { [weak self] in
@@ -55,6 +56,31 @@ final class ExamplePresenter {
                         case .cancelled:
                             break
                         }
+                    }
+                }
+            }
+        }
+        
+        view?.onShowPhotoLibraryV2ButtonTap = { [weak self] in
+            self?.interactor.photoLibraryItems { items in
+                let data = MediaPickerData(
+                    maxItemsCount: 20,
+                    cropEnabled: true,
+                    autocorrectEnabled: true,
+                    hapticFeedbackEnabled: true,
+                    cropCanvasSize: self?.cropCanvasSize ?? .zero
+                )
+                self?.router.showPhotoLibraryV2(
+                    mediaPickerData: data,
+                    selectedItems: items,
+                    maxSelectedItemsCount: 5)
+                { module in
+                    weak var weakModule = module
+                    module.onFinish = { result in
+                        weakModule?.dismissModule()
+                    }
+                    module.onCancel = {
+                        weakModule?.dismissModule()
                     }
                 }
             }

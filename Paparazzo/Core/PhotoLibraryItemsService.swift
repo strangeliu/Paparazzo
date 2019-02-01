@@ -212,35 +212,40 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
     private func callObserverHandler(changes phChanges: PHFetchResultChangeDetails<PHAsset>?) {
         if let phChanges = phChanges, phChanges.hasIncrementalChanges {
             onAlbumEvent?(.incrementalChanges(photoLibraryChanges(from: phChanges)))
+        } else if let observedAlbum = observedAlbum {
+            onAlbumEvent?(.fullReload(photoLibraryItems(from: observedAlbum.fetchResult)))
         } else {
-            onAlbumEvent?(.fullReload(photoLibraryItems(from: assetsFromFetchResult())))
+            onAlbumEvent?(.fullReload([]))
         }
     }
     
-    private func assetsFromFetchResult() -> [PHAsset] {
-        var images = [PHAsset]()
-        observedAlbum?.fetchResult.enumerateObjects(options: enumerationOptions()) { asset, _, _ in
-            images.append(asset)
+    private func photoLibraryItems(from fetchResult: PHFetchResult<PHAsset>) -> [PhotoLibraryItem] {
+        
+        let indexes = 0 ..< fetchResult.count
+        
+        return indexes.map { indexInFetchResult in
+            
+            let index: Int = {
+                switch photosOrder {
+                case .normal:
+                    return indexInFetchResult
+                case .reversed:
+                    return indexes.upperBound - indexInFetchResult - 1
+                }
+            }()
+            
+            return PhotoLibraryItem(
+                image: PHAssetImageSource(
+                    fetchResult: fetchResult,
+                    index: index,
+                    imageManager: imageManager
+                )
+            )
         }
-        return images
-    }
-    
-    private func enumerationOptions() -> NSEnumerationOptions {
-        switch photosOrder {
-        case .normal:
-            return []
-        case .reversed:
-            return [.reverse]
-        }
-    }
-    
-    private func photoLibraryItems(from assets: [PHAsset]) -> [PhotoLibraryItem] {
-        return assets.map(photoLibraryItem)
     }
     
     private func photoLibraryItem(from asset: PHAsset) -> PhotoLibraryItem {
         return PhotoLibraryItem(
-            identifier: asset.localIdentifier,
             image: PHAssetImageSource(asset: asset, imageManager: imageManager)
         )
     }
@@ -249,18 +254,12 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
     func photoLibraryChanges(from changes: PHFetchResultChangeDetails<PHAsset>)
         -> PhotoLibraryChanges
     {
-        var assetsAfterChanges = [PHAsset]()
-        
-        changes.fetchResultAfterChanges.enumerateObjects(options: enumerationOptions()) { asset, _, _ in
-            assetsAfterChanges.append(asset)
-        }
-        
         return PhotoLibraryChanges(
             removedIndexes: removedIndexes(from: changes),
             insertedItems: insertedObjects(from: changes),
             updatedItems: updatedObjects(from: changes),
             movedIndexes: movedIndexes(from: changes),
-            itemsAfterChanges: photoLibraryItems(from: assetsAfterChanges)
+            itemsAfterChanges: photoLibraryItems(from: changes.fetchResultAfterChanges)
         )
     }
     

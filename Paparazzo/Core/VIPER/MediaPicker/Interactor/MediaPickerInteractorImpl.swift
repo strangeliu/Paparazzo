@@ -5,7 +5,8 @@ final class MediaPickerInteractorImpl: MediaPickerInteractor {
     private let latestLibraryPhotoProvider: PhotoLibraryLatestPhotoProvider
     private let deviceOrientationService: DeviceOrientationService
     
-    let maxItemsCount: Int?
+    let maxPhotosCount: Int?
+    let maxVideosCount: Int?
     let cropCanvasSize: CGSize
     
     private(set) var items = [MediaPickerItem]()
@@ -16,11 +17,20 @@ final class MediaPickerInteractorImpl: MediaPickerInteractor {
     let cameraEnabled: Bool
     let photoLibraryEnabled: Bool
     
+    private var photos: [MediaPickerItem] {
+        return items.filter({ !$0.isVideo })
+    }
+    
+    private var videos: [MediaPickerItem] {
+        return items.filter({ $0.isVideo })
+    }
+    
     init(
         items: [MediaPickerItem],
         autocorrectionFilters: [Filter],
         selectedItem: MediaPickerItem?,
-        maxItemsCount: Int?,
+        maxPhotosCount: Int?,
+        maxVideosCount: Int?,
         cropCanvasSize: CGSize,
         cameraEnabled: Bool,
         photoLibraryEnabled: Bool,
@@ -30,7 +40,8 @@ final class MediaPickerInteractorImpl: MediaPickerInteractor {
         self.items = items
         self.autocorrectionFilters = autocorrectionFilters
         self.selectedItem = selectedItem
-        self.maxItemsCount = maxItemsCount
+        self.maxPhotosCount = maxPhotosCount
+        self.maxVideosCount = maxVideosCount
         self.cropCanvasSize = cropCanvasSize
         self.cameraEnabled = cameraEnabled
         self.photoLibraryEnabled = photoLibraryEnabled
@@ -61,7 +72,7 @@ final class MediaPickerInteractorImpl: MediaPickerInteractor {
         _ items: [MediaPickerItem]
         ) -> (addedItems: [MediaPickerItem], startIndex: Int)
     {
-        let numberOfItemsToAdd = min(items.count, maxItemsCount.flatMap { $0 - self.items.count } ?? Int.max)
+        let numberOfItemsToAdd = min(items.count, maxPhotosCount.flatMap { $0 - self.items.count } ?? Int.max)
         let itemsToAdd = items[0..<numberOfItemsToAdd]
         let startIndex = self.items.count
         self.items.append(contentsOf: itemsToAdd)
@@ -132,12 +143,20 @@ final class MediaPickerInteractorImpl: MediaPickerInteractor {
         return items.index(of: item)
     }
     
-    func numberOfItemsAvailableForAdding() -> Int? {
-        return maxItemsCount.flatMap { $0 - items.count }
+    func numberOfPhotosAvailableForAdding() -> Int? {
+        return maxPhotosCount.flatMap { $0 - photos.count }
+    }
+    
+    func numberOfVideosAvailableForAdding() -> Int? {
+        return maxVideosCount.flatMap { $0 - videos.count }
     }
     
     func canAddItems() -> Bool {
-        return maxItemsCount.flatMap { self.items.count < $0 } ?? true
+        if photos.isEmpty {
+            return maxVideosCount.flatMap { self.videos.count < $0 } ?? true
+        } else {
+            return maxPhotosCount.flatMap { self.photos.count < $0 } ?? true
+        }
     }
     
     func autocorrectItem(

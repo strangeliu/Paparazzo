@@ -102,6 +102,10 @@ final class PhotoLibraryViewController: PaparazzoViewController, PhotoLibraryVie
         photoLibraryView.dimsUnselectedItems = dimUnselectedItems
     }
     
+    func setSelectionMode(_ selectionMode: PhotoLibraryItemSelectionMode) {
+        photoLibraryView.selectionMode = selectionMode
+    }
+    
     func deselectAllItems() {
         photoLibraryView.deselectAndAdjustAllCells()
     }

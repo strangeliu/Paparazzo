@@ -1,7 +1,8 @@
 import UIKit
 
 struct InfoMessageViewData {
-    let text: String
+    
+    var text: String
     let timeout: TimeInterval
     let font: UIFont?
 }

@@ -1,4 +1,5 @@
 import UIKit
+import ImageSource
 
 final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeConfigurable {
     
@@ -16,6 +17,12 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
     var canSelectMoreItems = false
     
     var dimsUnselectedItems = false {
+        didSet {
+            adjustDimmingForVisibleCells()
+        }
+    }
+    
+    var selectionMode = PhotoLibraryItemSelectionMode.none {
         didSet {
             adjustDimmingForVisibleCells()
         }
@@ -379,15 +386,21 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
     // MARK: - UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        adjustDimmingForCell(cell)
+        adjustDimmingForCell(cell, at: indexPath)
     }
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         let cellData = dataSource.item(at: indexPath)
-        
         cellData.onSelectionPrepare?()
-        
-        return canSelectMoreItems && cellData.previewAvailable
+        let cellIsVideo = cellData.isVideo
+        switch selectionMode {
+        case .none:
+            return canSelectMoreItems && cellData.previewAvailable
+        case .photos:
+            return canSelectMoreItems && cellData.previewAvailable && !cellIsVideo
+        case .videos:
+            return canSelectMoreItems && cellData.previewAvailable && cellIsVideo
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -398,10 +411,23 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
         dataSource.item(at: indexPath).onSelect?()
         
         adjustDimmingForCellAtIndexPath(indexPath)
+        
+        if let cell = collectionView.cellForItem(at: indexPath) {
+            UIView.animate(withDuration: 0.3) {
+                cell.setNeedsLayout()
+                cell.layoutIfNeeded()
+            }
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
         onDeselectItem(at: indexPath)
+        if let cell = collectionView.cellForItem(at: indexPath) {
+            UIView.animate(withDuration: 0.3) {
+                cell.setNeedsLayout()
+                cell.layoutIfNeeded()
+            }
+        }
     }
     
     // MARK: - Private
@@ -459,19 +485,34 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
         }
     }
     
-    private func adjustDimmingForCell(_ cell: UICollectionViewCell) {
-        let shouldDimCell = (dimsUnselectedItems && !cell.isSelected)
-        cell.contentView.alpha = shouldDimCell ? 0.3 : 1
+    private func adjustDimmingForCell(_ cell: UICollectionViewCell, at indexPath: IndexPath) {
+        let cellData = dataSource.item(at: indexPath)
+        let cellIsVideo = cellData.isVideo
+        switch selectionMode {
+        case .none:
+            cell.contentView.alpha = 1
+        case .photos:
+            let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || cellIsVideo
+            cell.contentView.alpha = shouldDimCell ? 0.3 : 1
+        case .videos:
+            let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || !cellIsVideo
+            cell.contentView.alpha = shouldDimCell ? 0.3 : 1
+        }
     }
     
     private func adjustDimmingForCellAtIndexPath(_ indexPath: IndexPath) {
         if let cell = collectionView.cellForItem(at: indexPath) {
-            adjustDimmingForCell(cell)
+            adjustDimmingForCell(cell, at: indexPath)
         }
     }
     
     private func adjustDimmingForVisibleCells() {
-        collectionView.visibleCells.forEach { adjustDimmingForCell($0) }
+        collectionView.visibleCells.forEach {
+            guard let indexPath = collectionView.indexPath(for: $0) else {
+                return
+            }
+            adjustDimmingForCell($0, at: indexPath)
+        }
     }
     
     private func configureCell(

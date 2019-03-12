@@ -409,7 +409,7 @@ final class MediaPickerPresenter: MediaPickerModule {
     }
     
     private func updateThumbnailsVisibility() {
-        view?.setShowPreview(interactor.maxItemsCount != 1 || thumbnailsAlwaysVisible)
+        view?.setShowPreview(interactor.maxPhotosCount != 1 || thumbnailsAlwaysVisible)
     }
     
     private func selectCamera() {
@@ -459,11 +459,13 @@ final class MediaPickerPresenter: MediaPickerModule {
     
     private func showPhotoLibrary() {
         
-        let maxItemsCount = interactor.numberOfItemsAvailableForAdding()
+        let maxPhotosCount = interactor.numberOfPhotosAvailableForAdding()
+        let maxVideosCount = interactor.numberOfVideosAvailableForAdding()
         
         let data = PhotoLibraryData(
             selectedItems: [],
-            maxSelectedItemsCount: maxItemsCount
+            maxSelectedPhotosCount: maxPhotosCount,
+            maxSelectedVideosCount: maxVideosCount
         )
         
         router.showPhotoLibrary(data: data) { [weak self] module in

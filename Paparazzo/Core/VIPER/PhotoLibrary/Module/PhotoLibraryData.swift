@@ -2,13 +2,16 @@ import UIKit
 
 public struct PhotoLibraryData {
     public let selectedItems: [PhotoLibraryItem]
-    public let maxSelectedItemsCount: Int?
+    public let maxSelectedPhotosCount: Int?
+    public let maxSelectedVideosCount: Int?
     
     public init(
         selectedItems: [PhotoLibraryItem] = [],
-        maxSelectedItemsCount: Int? = nil)
+        maxSelectedPhotosCount: Int? = nil,
+        maxSelectedVideosCount: Int? = nil)
     {
         self.selectedItems = selectedItems
-        self.maxSelectedItemsCount = maxSelectedItemsCount
+        self.maxSelectedPhotosCount = maxSelectedPhotosCount
+        self.maxSelectedVideosCount = maxSelectedVideosCount
     }
 }

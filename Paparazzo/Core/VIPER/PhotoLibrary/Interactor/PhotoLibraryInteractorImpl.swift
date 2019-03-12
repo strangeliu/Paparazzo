@@ -4,7 +4,8 @@ import ImageSource
 final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     
     // MARK: - State
-    private var maxSelectedItemsCount: Int?
+    private var maxSelectedPhotosCount: Int?
+    private var maxSelectedVideosCount: Int?
     private var onAlbumEvent: ((PhotoLibraryAlbumEvent, PhotoLibraryItemSelectionState) -> ())?
     
     // MARK: - Dependencies
@@ -14,17 +15,27 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     
     init(
         selectedItems: [PhotoLibraryItem],
-        maxSelectedItemsCount: Int? = nil,
+        maxSelectedPhotosCount: Int? = nil,
+        maxSelectedVideosCount: Int? = nil,
         photoLibraryItemsService: PhotoLibraryItemsService)
     {
         self.selectedItems = selectedItems
-        self.maxSelectedItemsCount = maxSelectedItemsCount
+        self.maxSelectedPhotosCount = maxSelectedPhotosCount
+        self.maxSelectedVideosCount = maxSelectedVideosCount
         self.photoLibraryItemsService = photoLibraryItemsService
     }
     
     // MARK: - PhotoLibraryInteractor
     private(set) var currentAlbum: PhotoLibraryAlbum?
     private(set) var selectedItems = [PhotoLibraryItem]()
+    
+    private var selectedPhotos: [PhotoLibraryItem] {
+        return selectedItems.filter({ !$0.isVideo })
+    }
+    
+    private var selectedVideos: [PhotoLibraryItem] {
+        return selectedItems.filter({ $0.isVideo })
+    }
     
     func observeAuthorizationStatus(handler: @escaping (_ accessGranted: Bool) -> ()) {
         photoLibraryItemsService.observeAuthorizationStatus(handler: handler)
@@ -63,11 +74,24 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     }
     
     func prepareSelection() -> PhotoLibraryItemSelectionState {
-        if selectedItems.count > 0 && maxSelectedItemsCount == 1 {
-            selectedItems.removeAll()
-            return selectionState(preSelectionAction: .deselectAll)
-        } else {
-            return selectionState()
+        let state = selectionState()
+        switch state.selectionMode {
+        case .none:
+            return state
+        case .photos:
+            if maxSelectedPhotosCount == 1 {
+                selectedItems.removeAll()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
+        case .videos:
+            if maxSelectedVideosCount == 1 {
+                selectedItems.removeAll()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
         }
     }
     
@@ -92,12 +116,23 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     // MARK: - Private
     
     private func canSelectMoreItems() -> Bool {
-        return maxSelectedItemsCount.flatMap { selectedItems.count < $0 } ?? true
+        if selectedPhotos.isEmpty {
+            return maxSelectedVideosCount.flatMap { selectedVideos.count < $0 } ?? true
+        } else {
+            return maxSelectedPhotosCount.flatMap { selectedPhotos.count < $0 } ?? true
+        }
     }
     
     private func selectionState(preSelectionAction: PhotoLibraryItemSelectionState.PreSelectionAction = .none) -> PhotoLibraryItemSelectionState {
+        let selectionMode: PhotoLibraryItemSelectionMode
+        if selectedItems.isEmpty {
+            selectionMode = .none
+        } else {
+            selectionMode = selectedVideos.isEmpty ? .photos : .videos
+        }
         return PhotoLibraryItemSelectionState(
             isAnyItemSelected: selectedItems.count > 0,
+            selectionMode: selectionMode,
             canSelectMoreItems: canSelectMoreItems(),
             preSelectionAction: preSelectionAction
         )

@@ -29,6 +29,13 @@ public struct PhotoLibraryItem: Equatable {
     public static func ==(item1: PhotoLibraryItem, item2: PhotoLibraryItem) -> Bool {
         return item1.image == item2.image
     }
+    
+    var isVideo: Bool {
+        guard let image = image as? PHAssetImageSource else {
+            return false
+        }
+        return image.asset.mediaType == .video
+    }
 }
 
 struct PhotoLibraryItemSelectionState {
@@ -39,8 +46,16 @@ struct PhotoLibraryItemSelectionState {
     }
     
     var isAnyItemSelected: Bool
+    var selectionMode: PhotoLibraryItemSelectionMode
     var canSelectMoreItems: Bool
     var preSelectionAction: PreSelectionAction
+}
+
+enum PhotoLibraryItemSelectionMode {
+    
+    case none
+    case photos
+    case videos
 }
 
 enum PhotoLibraryAlbumEvent {

@@ -31,3 +31,13 @@ public final class MediaPickerItem: Equatable {
         return item1.identifier == item2.identifier
     }
 }
+
+extension MediaPickerItem {
+    
+    var isVideo: Bool {
+        guard let image = image as? PHAssetImageSource else {
+            return false
+        }
+        return image.asset.mediaType == .video
+    }
+}

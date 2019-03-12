@@ -439,7 +439,7 @@ final class PhotoLibraryAlbum: Equatable {
     fileprivate convenience init(assetCollection: PHAssetCollection) {
         
         let fetchOptions = PHFetchOptions()
-        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+//        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
         if #available(iOS 9.0, *) {
             fetchOptions.includeAssetSourceTypes = [.typeUserLibrary, .typeCloudShared, .typeiTunesSynced]
         }

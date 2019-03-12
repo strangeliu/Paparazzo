@@ -8,7 +8,8 @@ protocol MediaPickerInteractor: class {
     var photoLibraryEnabled: Bool { get }
     var photoLibraryItems: [PhotoLibraryItem] { get }
     var selectedItem: MediaPickerItem? { get }
-    var maxItemsCount: Int? { get }
+    var maxPhotosCount: Int? { get }
+    var maxVideosCount: Int? { get }
     
     func addItems(
         _ items: [MediaPickerItem]
@@ -28,7 +29,9 @@ protocol MediaPickerInteractor: class {
     
     func indexOfItem(_ item: MediaPickerItem) -> Int?
     
-    func numberOfItemsAvailableForAdding() -> Int?
+    func numberOfPhotosAvailableForAdding() -> Int?
+    
+    func numberOfVideosAvailableForAdding() -> Int?
     
     func observeDeviceOrientation(handler: @escaping (DeviceOrientation) -> ())
     func observeLatestPhotoLibraryItem(handler: @escaping (ImageSource?) -> ())

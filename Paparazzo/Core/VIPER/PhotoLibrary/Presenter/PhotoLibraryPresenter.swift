@@ -134,6 +134,7 @@ final class PhotoLibraryPresenter: PhotoLibraryModule {
     }
     
     private func adjustViewForSelectionState(_ state: PhotoLibraryItemSelectionState) {
+        view?.setSelectionMode(state.selectionMode)
         view?.setDimsUnselectedItems(!state.canSelectMoreItems)
         view?.setCanSelectMoreItems(state.canSelectMoreItems)
         

@@ -40,6 +40,14 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     private(set) var currentAlbum: PhotoLibraryAlbum?
     private(set) var selectedItems = [PhotoLibraryItem]()
     
+    private var selectedPhotos: [PhotoLibraryItem] {
+        return selectedItems.filter({ !$0.isVideo })
+    }
+    
+    private var selectedVideos: [PhotoLibraryItem] {
+        return selectedItems.filter({ $0.isVideo })
+    }
+    
     func observeDeviceOrientation(handler: @escaping (DeviceOrientation) -> ()) {
         deviceOrientationService.onOrientationChange = handler
         handler(deviceOrientationService.currentOrientation)
@@ -141,8 +149,15 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     }
     
     private func selectionState(preSelectionAction: PhotoLibraryItemSelectionState.PreSelectionAction = .none) -> PhotoLibraryItemSelectionState {
+        let selectionMode: PhotoLibraryItemSelectionMode
+        if selectedItems.isEmpty {
+            selectionMode = .none
+        } else {
+            selectionMode = selectedVideos.isEmpty ? .photos : .videos
+        }
         return PhotoLibraryItemSelectionState(
             isAnyItemSelected: selectedItems.count > 0,
+            selectionMode: selectionMode,
             canSelectMoreItems: canSelectMoreItems(),
             preSelectionAction: preSelectionAction
         )

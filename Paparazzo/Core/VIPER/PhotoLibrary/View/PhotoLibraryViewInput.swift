@@ -10,6 +10,7 @@ protocol PhotoLibraryViewInput: class {
     func setTitleVisible(_: Bool)
     
     func setPlaceholderState(_: PhotoLibraryPlaceholderState)
+    func setSelectionMode(_ selectionMode: PhotoLibraryItemSelectionMode)
     
     func setItems(_: [PhotoLibraryItemCellData], scrollToBottom: Bool, completion: (() -> ())?)
     func applyChanges(_: PhotoLibraryViewChanges, completion: (() -> ())?)
@@ -59,6 +60,14 @@ struct PhotoLibraryItemCellData: Equatable {
     var onSelect: (() -> ())?
     var onSelectionPrepare: (() -> ())?
     var onDeselect: (() -> ())?
+    
+    var isVideo: Bool {
+        if let image = image as? PHAssetImageSource {
+            return image.asset.mediaType == .video
+        } else {
+            return false
+        }
+    }
     
     init(image: ImageSource) {
         self.image = image

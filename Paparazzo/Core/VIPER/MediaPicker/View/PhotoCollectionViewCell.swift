@@ -49,7 +49,7 @@ class PhotoCollectionViewCell: UIImageSourceCollectionViewCell {
     open override func layoutSubviews() {
         super.layoutSubviews()
         
-        imageView.frame = UIEdgeInsetsInsetRect(contentView.bounds, imageViewInsets)
+        imageView.frame = contentView.bounds.inset(by: imageViewInsets)
         
         if let imageSource = imageSource as? PHAssetImageSource {
             let asset = imageSource.asset

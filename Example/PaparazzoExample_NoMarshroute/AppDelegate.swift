@@ -7,8 +7,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?)
+        -> Bool
+    {
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = rootViewController()
         window?.makeKeyAndVisible()
@@ -73,6 +76,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 ),
                 onFinish: { images in
                     photoLibraryItems = images
+                }
+            )
+            
+            exampleController?.present(viewController, animated: true, completion: nil)
+        }
+        
+        exampleController.onShowPhotoLibraryV2ButtonTap = { [weak exampleController] in
+            
+            let viewController = PaparazzoFacade.libraryV2ViewController(
+                theme: PaparazzoUITheme.appSpecificTheme(),
+                parameters: PhotoLibraryV2Data(
+                    mediaPickerData: MediaPickerData()
+                ),
+                onFinish: { result in
+                    print(result)
                 }
             )
             

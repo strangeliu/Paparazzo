@@ -6,7 +6,8 @@ public struct PaparazzoUITheme:
     PhotoLibraryV2UITheme,
     ImageCroppingUITheme,
     MaskCropperUITheme,
-    ScannerRootModuleUITheme
+    ScannerRootModuleUITheme,
+    NewCameraUITheme
 {
     public init() {}
 
@@ -40,6 +41,9 @@ public struct PaparazzoUITheme:
     public var cameraSubtitleColor = UIColor(white: 1, alpha: 1)
     public var cameraSubtitleFont = UIFont.systemFont(ofSize: 14)
     public var cameraHintFont = UIFont.systemFont(ofSize: 17)
+    public var cameraBottomContinueButtonBackgroundColor = UIColor(red: 0 / 255, green: 170.0 / 255, blue: 1, alpha: 1)
+    public var cameraBottomContinueButtonTitleColor = UIColor.white
+    public var cameraBottomContinueButtonFont = UIFont.systemFont(ofSize: 16)
     
     public var accessDeniedTitleFont = UIFont.boldSystemFont(ofSize: 17)
     public var accessDeniedMessageFont = UIFont.systemFont(ofSize: 17)
@@ -74,6 +78,10 @@ public struct PaparazzoUITheme:
     public var continueButtonTitleHighlightedColor = UIColor(red: 0, green: 152.0/255, blue: 229.0/255, alpha: 1)
     public var closeIcon = PaparazzoUITheme.image(named: "bt-close")
     public var continueButtonTitleFont = UIFont.systemFont(ofSize: 17)
+    public var libraryBottomContinueButtonBackgroundColor = UIColor(red: 0 / 255, green: 170.0 / 255, blue: 1, alpha: 1)
+    public var libraryBottomContinueButtonTitleColor = UIColor.white
+    public var libraryBottomContinueButtonFont = UIFont.systemFont(ofSize: 16)
+    public var librarySelectionIndexFont = UIFont.systemFont(ofSize: 16)
     
     // MARK: - ImageCroppingUITheme
     
@@ -91,7 +99,16 @@ public struct PaparazzoUITheme:
     
     public var maskCropperDiscardPhotoIcon = PaparazzoUITheme.image(named: "discard")
     public var maskCropperConfirmPhotoIcon = PaparazzoUITheme.image(named: "confirm")
-    public var cameraIcon = PaparazzoUITheme.image(named: "camera")
+    public var cameraIcon = PaparazzoUITheme.image(named: "camera-new")
+    
+    // MARK: - NewCameraUITheme
+    public var newCameraCloseIcon = PaparazzoUITheme.image(named: "bt-close")
+    public var newCameraFlashOnIcon = PaparazzoUITheme.image(named: "flash_on")
+    public var newCameraFlashOffIcon = PaparazzoUITheme.image(named: "flash_off")
+    public var newCameraDoneButtonFont = UIFont.systemFont(ofSize: 16)
+    public var newCameraPhotosCountFont = UIFont.systemFont(ofSize: 16)
+    public var newCameraPhotosCountPlaceholderFont: UIFont = UIFont.systemFont(ofSize: 16)
+    public var newCameraHintFont = UIFont.systemFont(ofSize: 16)
 
     // MARK: - Private
     private static func image(named name: String) -> UIImage? {

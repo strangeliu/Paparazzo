@@ -7,15 +7,16 @@ final class CameraAssemblyImpl: BasePaparazzoAssembly, CameraAssembly {
     func module(initialActiveCameraType: CameraType, overridenTheme: PaparazzoUITheme?, isMetalEnabled: Bool) -> (UIView, CameraModuleInput) {
         let deviceOrientationService = DeviceOrientationServiceImpl()
         
-        let cameraService = serviceFactory.cameraService(
-            initialActiveCameraType: initialActiveCameraType
-        )
-        
+        let cameraService = serviceFactory.cameraService(initialActiveCameraType: initialActiveCameraType)
         cameraService.isMetalEnabled = isMetalEnabled
+        
+        let locationProvider = serviceFactory.locationProvider()
         
         let interactor = CameraInteractorImpl(
             cameraService: cameraService,
-            deviceOrientationService: deviceOrientationService
+            deviceOrientationService: deviceOrientationService,
+            imageMetadataWritingService: serviceFactory.imageMetadataWritingService(),
+            locationProvider: locationProvider
         )
         
         let presenter = CameraPresenter(

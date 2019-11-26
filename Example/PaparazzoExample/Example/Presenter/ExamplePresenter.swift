@@ -64,7 +64,7 @@ final class ExamplePresenter {
         view?.onShowPhotoLibraryV2ButtonTap = { [weak self] in
             self?.interactor.photoLibraryItems { items in
                 let data = MediaPickerData(
-                    maxItemsCount: 20,
+                    maxItemsCount: 5,
                     cropEnabled: true,
                     autocorrectEnabled: true,
                     hapticFeedbackEnabled: true,
@@ -73,16 +73,22 @@ final class ExamplePresenter {
                 self?.router.showPhotoLibraryV2(
                     mediaPickerData: data,
                     selectedItems: items,
-                    maxSelectedItemsCount: 5)
-                { module in
-                    weak var weakModule = module
-                    module.onFinish = { result in
-                        weakModule?.dismissModule()
+                    isNewFlowPrototype: false,
+                    configure: { module in
+                        weak var weakModule = module
+                        module.setContinueButtonPlacement(.bottom)
+                        module.onFinish = { result in
+                            print("onFinish")
+                            weakModule?.setContinueButtonStyle(.spinner)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                weakModule?.dismissModule()
+                            }
+                        }
+                        module.onCancel = {
+                            weakModule?.dismissModule()
+                        }
                     }
-                    module.onCancel = {
-                        weakModule?.dismissModule()
-                    }
-                }
+                )
             }
         }
         
@@ -150,7 +156,7 @@ final class ExamplePresenter {
                     recognitionHandler.onRecognize = { label in
                         module?.showInfoMessage(label, timeout: 3)
                     }
-            }
+                }
             )   
         }
     }
@@ -184,7 +190,7 @@ final class ExamplePresenter {
             items: items,
             autocorrectionFilters: [AutoAdjustmentFilter()],
             selectedItem: items.last,
-            maxItemsCount: 20,
+            maxItemsCount: 5,
             cropEnabled: true,
             autocorrectEnabled: true,
             hapticFeedbackEnabled: true,
@@ -214,6 +220,7 @@ final class ExamplePresenter {
         }
         
         module.setContinueButtonTitle("Done")
+        module.setContinueButtonPlacement(.bottom)
         
         module.onCancel = { [weak module] in
             module?.dismissModule()
@@ -240,11 +247,12 @@ final class ExamplePresenter {
             
             let options = ImageRequestOptions(
                 size: .fitSize(CGSize(width: 1000, height: 1000)),
-                deliveryMode: .best
+                deliveryMode: .best,
+                needsMetadata: true
             )
             
             items.first?.image.requestImage(options: options) { (result: ImageRequestResult<UIImage>) in
-                let data = result.image.flatMap { UIImagePNGRepresentation($0) }
+                let data = result.image.flatMap { $0.pngData() }
                 let url = URL(fileURLWithPath: NSTemporaryDirectory() + "/crop_test2.jpg")
                 try! data?.write(to: url, options: [.atomic])
             }

@@ -1,14 +1,24 @@
 import ImageSource
+import CoreLocation
 
 final class CameraInteractorImpl: CameraInteractor {
     
     private let cameraService: CameraService
     private let deviceOrientationService: DeviceOrientationService
+    private let imageMetadataWritingService: ImageMetadataWritingService
+    private let locationProvider: LocationProvider
     private var previewImagesSizeForNewPhotos: CGSize?
     
-    init(cameraService: CameraService, deviceOrientationService: DeviceOrientationService) {
+    init(
+        cameraService: CameraService,
+        deviceOrientationService: DeviceOrientationService,
+        imageMetadataWritingService: ImageMetadataWritingService,
+        locationProvider: LocationProvider)
+    {
         self.cameraService = cameraService
         self.deviceOrientationService = deviceOrientationService
+        self.imageMetadataWritingService = imageMetadataWritingService
+        self.locationProvider = locationProvider
     }
     
     // MARK: - CameraInteractor
@@ -49,12 +59,12 @@ final class CameraInteractorImpl: CameraInteractor {
     }
     
     func takePhoto(completion: @escaping (MediaPickerItem?) -> ()) {
-        
         cameraService.takePhoto { [weak self] photo in
+            guard let imageSource = photo.flatMap({ LocalImageSource(path: $0.path) }) else {
+                return completion(nil)
+            }
             
-            let imageSource = photo.flatMap { LocalImageSource(path: $0.path) }
-            
-            if let imageSource = imageSource, let previewSize = self?.previewImagesSizeForNewPhotos {
+            if let previewSize = self?.previewImagesSizeForNewPhotos {
                 
                 let previewOptions = ImageRequestOptions(size: .fillSize(previewSize), deliveryMode: .best)
                 
@@ -66,8 +76,17 @@ final class CameraInteractorImpl: CameraInteractor {
                 }
                 
             } else {
-                completion(imageSource.flatMap { MediaPickerItem(image: $0, source: .camera) })
+                completion(MediaPickerItem(image: imageSource, source: .camera))
             }
+            
+            self?.addGpsDataToExif(of: imageSource)
+        }
+    }
+    
+    private func addGpsDataToExif(of imageSource: LocalImageSource) {
+        locationProvider.location { [imageMetadataWritingService] location in
+            guard let location = location else { return }
+            imageMetadataWritingService.writeGpsData(from: location, to: imageSource, completion: nil)
         }
     }
     

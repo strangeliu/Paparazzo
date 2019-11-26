@@ -4,7 +4,6 @@ import ImageSource
 final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     
     // MARK: - State
-    private var maxSelectedItemsCount: Int?
     private var onAlbumEvent: ((PhotoLibraryAlbumEvent, PhotoLibraryItemSelectionState) -> ())?
     
     // MARK: - Dependencies
@@ -17,19 +16,18 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     let mediaPickerData: MediaPickerData
     
     // MARK: - Init
-    
     init(
         mediaPickerData: MediaPickerData,
         selectedItems: [PhotoLibraryItem],
-        maxSelectedItemsCount: Int? = nil,
         photoLibraryItemsService: PhotoLibraryItemsService,
         cameraService: CameraService,
         deviceOrientationService: DeviceOrientationService,
         canRotate: Bool)
     {
         self.mediaPickerData = mediaPickerData
-        self.selectedItems = selectedItems
-        self.maxSelectedItemsCount = maxSelectedItemsCount
+        self.selectedPhotosStorage = SelectedImageStorage(
+            images: mediaPickerData.items.map { PhotoLibraryItem(image: $0.image) }
+        )
         self.photoLibraryItemsService = photoLibraryItemsService
         self.cameraService = cameraService
         self.deviceOrientationService = deviceOrientationService
@@ -37,8 +35,12 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     }
     
     // MARK: - PhotoLibraryInteractor
+    let selectedPhotosStorage: SelectedImageStorage
     private(set) var currentAlbum: PhotoLibraryAlbum?
-    private(set) var selectedItems = [PhotoLibraryItem]()
+    
+    var selectedItems: [PhotoLibraryItem] {
+        return selectedPhotosStorage.images
+    }
     
     private var selectedPhotos: [PhotoLibraryItem] {
         return selectedItems.filter({ !$0.isVideo })
@@ -103,21 +105,23 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     
     func selectItem(_ item: PhotoLibraryItem) -> PhotoLibraryItemSelectionState {
         if canSelectMoreItems() {
-            selectedItems.append(item)
+            selectedPhotosStorage.addItem(item)
         }
         return selectionState()
     }
     
     func deselectItem(_ item: PhotoLibraryItem) -> PhotoLibraryItemSelectionState {
-        if let index = selectedItems.index(of: item) {
-            selectedItems.remove(at: index)
-        }
+        selectedPhotosStorage.removeItem(item)
         return selectionState()
     }
     
+    func moveSelectedItem(at sourceIndex: Int, to destinationIndex: Int) {
+        selectedPhotosStorage.moveItem(at: sourceIndex, to: destinationIndex)
+    }
+    
     func prepareSelection() -> PhotoLibraryItemSelectionState {
-        if selectedItems.count > 0 && maxSelectedItemsCount == 1 {
-            selectedItems.removeAll()
+        if selectedItems.count > 0 && mediaPickerData.maxItemsCount == 1 {
+            selectedPhotosStorage.removeAllItems()
             return selectionState(preSelectionAction: .deselectAll)
         } else {
             return selectionState()
@@ -142,10 +146,14 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
         }
     }
     
+    func observeSelectedItemsChange(_ onChange: @escaping () -> ()) {
+        selectedPhotosStorage.observeImagesChange(onChange)
+    }
+    
     // MARK: - Private
     
     private func canSelectMoreItems() -> Bool {
-        return maxSelectedItemsCount.flatMap { selectedItems.count < $0 } ?? true
+        return mediaPickerData.maxItemsCount.flatMap { selectedItems.count < $0 } ?? true
     }
     
     private func selectionState(preSelectionAction: PhotoLibraryItemSelectionState.PreSelectionAction = .none) -> PhotoLibraryItemSelectionState {

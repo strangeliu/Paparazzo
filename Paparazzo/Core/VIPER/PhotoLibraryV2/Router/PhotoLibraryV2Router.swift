@@ -6,6 +6,14 @@ protocol PhotoLibraryV2Router: class {
         data: MediaPickerData,
         overridenTheme: PaparazzoUITheme?,
         isMetalEnabled: Bool,
+        isNewFlowPrototype: Bool,
         configure: (MediaPickerModule) -> ()
+    )
+    
+    func showNewCamera(
+        selectedImagesStorage: SelectedImageStorage,
+        mediaPickerData: MediaPickerData,
+        shouldAllowFinishingWithNoPhotos: Bool,
+        configure: (NewCameraModule) -> ()
     )
 }

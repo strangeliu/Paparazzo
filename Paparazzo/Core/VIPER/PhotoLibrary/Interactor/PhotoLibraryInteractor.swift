@@ -1,5 +1,7 @@
 import Foundation
+import Photos
 import ImageSource
+import MobileCoreServices
 
 protocol PhotoLibraryInteractor: class {
     
@@ -34,7 +36,14 @@ public struct PhotoLibraryItem: Equatable {
         guard let image = image as? PHAssetImageSource else {
             return false
         }
-        return image.asset.mediaType == .video
+        return image.asset.isVideo
+    }
+    
+    var isGif: Bool {
+        guard let image = image as? PHAssetImageSource else {
+            return false
+        }
+        return image.asset.isGif
     }
 }
 
@@ -56,6 +65,7 @@ enum PhotoLibraryItemSelectionMode {
     case none
     case photos
     case videos
+    case gifs
 }
 
 enum PhotoLibraryAlbumEvent {
@@ -73,4 +83,34 @@ struct PhotoLibraryChanges {
     let movedIndexes: [(from: Int, to: Int)]
     
     let itemsAfterChanges: [PhotoLibraryItem]
+}
+
+extension Array where Element == PhotoLibraryItem {
+    
+    var hasVideo: Bool {
+        return !filter({ $0.isVideo }).isEmpty
+    }
+    
+    var hasGif: Bool {
+        return !filter({ $0.isGif }).isEmpty
+    }
+}
+
+extension PHAsset {
+    
+    public var isVideo: Bool {
+        return mediaType == .video
+    }
+    
+    public var isGif: Bool {
+        if #available(iOS 11, *) {
+            return playbackStyle == .imageAnimated
+        } else {
+            if let imageType = self.value(forKey: "uniformTypeIdentifier") as? String {
+                return imageType == kUTTypeGIF as String
+            } else {
+                return false
+            }
+        }
+    }
 }

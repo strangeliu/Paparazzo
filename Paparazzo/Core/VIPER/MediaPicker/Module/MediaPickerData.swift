@@ -5,6 +5,7 @@ public struct MediaPickerData {
     public let autocorrectionFilters: [Filter]
     public let selectedItem: MediaPickerItem?
     public let maxPhotosCount: Int?
+    public let maxGifCount: Int?
     public let maxVideosCount: Int?
     public let cropEnabled: Bool
     public let autocorrectEnabled: Bool
@@ -19,6 +20,7 @@ public struct MediaPickerData {
         autocorrectionFilters: [Filter] = [],
         selectedItem: MediaPickerItem? = nil,
         maxPhotosCount: Int? = nil,
+        maxGifCount: Int? = nil,
         maxVideosCount: Int? = nil,
         cropEnabled: Bool = true,
         autocorrectEnabled: Bool = false,
@@ -32,6 +34,7 @@ public struct MediaPickerData {
         self.autocorrectionFilters = autocorrectionFilters
         self.selectedItem = selectedItem
         self.maxPhotosCount = maxPhotosCount
+        self.maxGifCount = maxGifCount
         self.maxVideosCount = maxVideosCount
         self.cropEnabled = cropEnabled
         self.autocorrectEnabled = autocorrectEnabled

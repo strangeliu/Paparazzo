@@ -5,6 +5,7 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     
     // MARK: - State
     private var maxSelectedPhotosCount: Int?
+    private var maxSelectedGifsCount: Int?
     private var maxSelectedVideosCount: Int?
     private var onAlbumEvent: ((PhotoLibraryAlbumEvent, PhotoLibraryItemSelectionState) -> ())?
     
@@ -16,11 +17,13 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     init(
         selectedItems: [PhotoLibraryItem],
         maxSelectedPhotosCount: Int? = nil,
+        maxSelectedGifsCount: Int? = nil,
         maxSelectedVideosCount: Int? = nil,
         photoLibraryItemsService: PhotoLibraryItemsService)
     {
         self.selectedItems = selectedItems
         self.maxSelectedPhotosCount = maxSelectedPhotosCount
+        self.maxSelectedGifsCount = maxSelectedGifsCount
         self.maxSelectedVideosCount = maxSelectedVideosCount
         self.photoLibraryItemsService = photoLibraryItemsService
     }
@@ -92,6 +95,13 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
             } else {
                 return state
             }
+        case .gifs:
+            if maxSelectedGifsCount == 1 {
+                selectedItems.removeAll()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
         }
     }
     
@@ -116,10 +126,14 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     // MARK: - Private
     
     private func canSelectMoreItems() -> Bool {
-        if selectedPhotos.isEmpty {
-            return maxSelectedVideosCount.flatMap { selectedVideos.count < $0 } ?? true
+        if selectedItems.isEmpty {
+            return true
+        } else if selectedItems.hasVideo {
+            return maxSelectedVideosCount.flatMap { selectedItems.count < $0 } ?? true
+        } else if selectedItems.hasGif {
+            return maxSelectedGifsCount.flatMap { selectedItems.count < $0 } ?? true
         } else {
-            return maxSelectedPhotosCount.flatMap { selectedPhotos.count < $0 } ?? true
+            return maxSelectedPhotosCount.flatMap { selectedItems.count < $0 } ?? true
         }
     }
     
@@ -127,8 +141,12 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
         let selectionMode: PhotoLibraryItemSelectionMode
         if selectedItems.isEmpty {
             selectionMode = .none
+        } else if selectedItems.hasVideo {
+            selectionMode = .videos
+        } else if selectedItems.hasGif {
+            selectionMode = .gifs
         } else {
-            selectionMode = selectedVideos.isEmpty ? .photos : .videos
+            selectionMode = .photos
         }
         return PhotoLibraryItemSelectionState(
             isAnyItemSelected: selectedItems.count > 0,

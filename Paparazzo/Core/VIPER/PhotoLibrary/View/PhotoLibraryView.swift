@@ -393,13 +393,16 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
         let cellData = dataSource.item(at: indexPath)
         cellData.onSelectionPrepare?()
         let cellIsVideo = cellData.isVideo
+        let cellIsGif = cellData.isGif
         switch selectionMode {
         case .none:
             return canSelectMoreItems && cellData.previewAvailable
         case .photos:
-            return canSelectMoreItems && cellData.previewAvailable && !cellIsVideo
+            return canSelectMoreItems && cellData.previewAvailable && !cellIsVideo && !cellIsGif
         case .videos:
             return canSelectMoreItems && cellData.previewAvailable && cellIsVideo
+        case .gifs:
+            return canSelectMoreItems && cellData.previewAvailable && cellIsGif
         }
     }
     
@@ -488,14 +491,18 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
     private func adjustDimmingForCell(_ cell: UICollectionViewCell, at indexPath: IndexPath) {
         let cellData = dataSource.item(at: indexPath)
         let cellIsVideo = cellData.isVideo
+        let cellIsGif = cellData.isGif
         switch selectionMode {
         case .none:
             cell.contentView.alpha = 1
         case .photos:
-            let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || cellIsVideo
+            let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || cellIsVideo || cellIsGif
             cell.contentView.alpha = shouldDimCell ? 0.3 : 1
         case .videos:
             let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || !cellIsVideo
+            cell.contentView.alpha = shouldDimCell ? 0.3 : 1
+        case .gifs:
+            let shouldDimCell = (dimsUnselectedItems && !cell.isSelected) || !cellIsGif
             cell.contentView.alpha = shouldDimCell ? 0.3 : 1
         }
     }

@@ -64,7 +64,15 @@ struct PhotoLibraryItemCellData: Equatable {
     
     var isVideo: Bool {
         if let image = image as? PHAssetImageSource {
-            return image.asset.mediaType == .video
+            return image.asset.isVideo
+        } else {
+            return false
+        }
+    }
+    
+    var isGif: Bool {
+        if let image = image as? PHAssetImageSource {
+            return image.asset.isGif
         } else {
             return false
         }

@@ -120,11 +120,31 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     }
     
     func prepareSelection() -> PhotoLibraryItemSelectionState {
-        if selectedItems.count > 0 && mediaPickerData.maxItemsCount == 1 {
-            selectedPhotosStorage.removeAllItems()
-            return selectionState(preSelectionAction: .deselectAll)
-        } else {
-            return selectionState()
+        let state = selectionState()
+        switch state.selectionMode {
+        case .none:
+            return state
+        case .photos:
+            if selectedItems.count > 0, mediaPickerData.maxPhotosCount == 1 {
+                selectedPhotosStorage.removeAllItems()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
+        case .videos:
+            if selectedItems.count > 0, mediaPickerData.maxVideosCount == 1 {
+                selectedPhotosStorage.removeAllItems()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
+        case .gifs:
+            if selectedItems.count > 0, mediaPickerData.maxGifCount == 1 {
+                selectedPhotosStorage.removeAllItems()
+                return selectionState(preSelectionAction: .deselectAll)
+            } else {
+                return state
+            }
         }
     }
     
@@ -153,15 +173,27 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     // MARK: - Private
     
     private func canSelectMoreItems() -> Bool {
-        return mediaPickerData.maxItemsCount.flatMap { selectedItems.count < $0 } ?? true
+        if selectedItems.isEmpty {
+            return true
+        } else if selectedItems.hasVideo {
+            return mediaPickerData.maxVideosCount.flatMap { selectedItems.count < $0 } ?? true
+        } else if selectedItems.hasGif {
+            return mediaPickerData.maxGifCount.flatMap { selectedItems.count < $0 } ?? true
+        } else {
+            return mediaPickerData.maxPhotosCount.flatMap { selectedItems.count < $0 } ?? true
+        }
     }
     
     private func selectionState(preSelectionAction: PhotoLibraryItemSelectionState.PreSelectionAction = .none) -> PhotoLibraryItemSelectionState {
         let selectionMode: PhotoLibraryItemSelectionMode
         if selectedItems.isEmpty {
             selectionMode = .none
+        } else if selectedItems.hasVideo {
+            selectionMode = .videos
+        } else if selectedItems.hasGif {
+            selectionMode = .gifs
         } else {
-            selectionMode = selectedVideos.isEmpty ? .photos : .videos
+            selectionMode = .photos
         }
         return PhotoLibraryItemSelectionState(
             isAnyItemSelected: selectedItems.count > 0,

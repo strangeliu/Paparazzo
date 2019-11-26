@@ -146,6 +146,7 @@ final class PhotoLibraryItemCell: PhotoCollectionViewCell, Customizable {
     func customizeWithItem(_ item: PhotoLibraryItemCellData) {
         imageSource = item.image
         getSelectionIndex = item.getSelectionIndex
+        isSelected = item.selected
     }
     
     // MARK: - Private

@@ -1,4 +1,5 @@
 import ImageSource
+import MobileCoreServices
 
 /// Главная модель, представляющая фотку в пикере
 public final class MediaPickerItem: Equatable {
@@ -38,6 +39,24 @@ extension MediaPickerItem {
         guard let image = image as? PHAssetImageSource else {
             return false
         }
-        return image.asset.mediaType == .video
+        return image.asset.isVideo
+    }
+    
+    var isGif: Bool {
+        guard let image = image as? PHAssetImageSource else {
+            return false
+        }
+        return image.asset.isGif
+    }
+}
+
+extension Array where Element == MediaPickerItem {
+    
+    var hasVideo: Bool {
+        return !filter({ $0.isVideo }).isEmpty
+    }
+    
+    var hasGif: Bool {
+        return !filter({ $0.isGif }).isEmpty
     }
 }

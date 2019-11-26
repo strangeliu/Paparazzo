@@ -48,6 +48,10 @@ final class NewCameraInteractorImpl: NewCameraInteractor {
     }
     
     func canAddItems() -> Bool {
-        return mediaPickerData.maxItemsCount.flatMap { self.selectedImagesStorage.images.count < $0 } ?? true
+        if selectedImagesStorage.images.isEmpty {
+            return true
+        } else {
+            return mediaPickerData.maxPhotosCount.flatMap { self.selectedImagesStorage.images.count < $0 } ?? true
+        }
     }
 }

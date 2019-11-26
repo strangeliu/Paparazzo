@@ -12,6 +12,7 @@ public final class PhotoLibraryAssemblyImpl: BasePaparazzoAssembly, PhotoLibrary
         let interactor = PhotoLibraryInteractorImpl(
             selectedItems: data.selectedItems,
             maxSelectedPhotosCount: data.maxSelectedPhotosCount,
+            maxSelectedGifsCount: data.maxSelectedGifCount,
             maxSelectedVideosCount: data.maxSelectedVideosCount,
             photoLibraryItemsService: photoLibraryItemsService
         )

@@ -24,7 +24,7 @@ public struct PhotoLibraryItem: Equatable {
     
     public var image: ImageSource
     
-    init(image: ImageSource) {
+    public init(image: ImageSource) {
         self.image = image
     }
     

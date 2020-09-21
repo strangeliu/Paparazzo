@@ -106,8 +106,12 @@ extension PHAsset {
         if #available(iOS 11, *) {
             return playbackStyle == .imageAnimated
         } else {
-            if let imageType = self.value(forKey: "uniformTypeIdentifier") as? String {
-                return imageType == kUTTypeGIF as String
+            if self.responds(to: Selector("uniformTypeIdentifier")) {
+                if let imageType = self.value(forKey: "uniformTypeIdentifier") as? String {
+                    return imageType == kUTTypeGIF as String
+                } else {
+                    return false
+                }
             } else {
                 return false
             }

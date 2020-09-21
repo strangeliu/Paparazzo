@@ -152,7 +152,7 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
         
         switch PHPhotoLibrary.authorizationStatus() {
         
-        case .authorized:
+        case .authorized, .limited:
             wasSetUp = true
             setUpFetchResult(completion: completion)
         
@@ -174,6 +174,7 @@ final class PhotoLibraryItemsServiceImpl: NSObject, PhotoLibraryItemsService, PH
         case .restricted, .denied:
             wasSetUp = true
             completion()
+            
         }
     }
     

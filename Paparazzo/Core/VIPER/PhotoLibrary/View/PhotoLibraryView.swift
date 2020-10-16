@@ -140,13 +140,14 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
     func setTheme(_ theme: ThemeType) {
         self.theme = theme
         backgroundColor = theme.photoLibraryBackgroundColor
-        collectionView.backgroundColor = theme.photoLibraryBackgroundColor
+        collectionView.backgroundColor = theme.photoLibraryCollectionBackgroundColor
         
-        titleView.backgroundColor = theme.photoLibraryTopbarBackgroundColor
+        titleView.backgroundColor = theme.photoLibraryCollectionBackgroundColor
         titleView.setLabelColor(theme.photoLibraryTopbarTitleColor)
         titleView.setLabelFont(theme.photoLibraryTitleFont)
         titleView.setIcon(theme.photoLibraryAlbumsDisclosureIcon)
         albumsTableView.backgroundColor = theme.photoLibraryBackgroundColor
+        albumsTableView.setTableViewBackgroundColor(theme.photoLibraryBackgroundColor)
         albumsTableView.photoLibraryAlbumListDefaultTextColor = theme.photoLibraryAlbumListDefaultTextColor
         albumsTableView.photoLibraryAlbumListSelectedTextColor = theme.photoLibraryAlbumListSelectedTextColor
         
@@ -154,9 +155,12 @@ final class PhotoLibraryView: UIView, UICollectionViewDelegateFlowLayout, ThemeC
         
         toolbar.setDiscardButtonIcon(theme.photoLibraryDiscardButtonIcon)
         toolbar.setConfirmButtonIcon(theme.photoLibraryConfirmButtonIcon)
+        toolbar.backgroundColor = theme.photoLibraryCollectionBackgroundColor
         
         albumsTableView.setCellLabelFont(theme.photoLibraryAlbumCellFont)
-        
+        albumsTableView.setCellBackgroundColor(theme.photoLibraryAlbumsTableViewCellBackgroundColor)
+        albumsTableView.setTableViewBackgroundColor(theme.photoLibraryAlbumsTableViewBackgroundColor)
+
         placeholderView.font = theme.photoLibraryPlaceholderFont
         placeholderView.textColor = theme.photoLibraryPlaceholderColor
     }

@@ -43,10 +43,11 @@ final class PhotoLibraryTitleView: UIView {
     
     func setLabelColor(_ color: UIColor) {
         label.textColor = color
+        iconView.tintColor = color
     }
     
     func setIcon(_ icon: UIImage?) {
-        iconView.image = icon
+        iconView.image = icon?.withRenderingMode(.alwaysTemplate)
         setNeedsLayout()
     }
     

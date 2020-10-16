@@ -1,3 +1,4 @@
+import AVFoundation
 import ImageSource
 
 final class NewCameraInteractorImpl: NewCameraInteractor {
@@ -31,6 +32,22 @@ final class NewCameraInteractorImpl: NewCameraInteractor {
         return cameraService.isFlashEnabled
     }
     
+    func observeCameraAuthorizationStatus(handler: @escaping (_ accessGranted: Bool) -> ()) {
+        #if targetEnvironment(simulator)
+            return handler(false)
+        #endif
+        
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            handler(true)
+        case .notDetermined, .denied, .restricted:
+            handler(false)
+        @unknown default:
+            assertionFailure("Unknown authorization status")
+            handler(false)
+        }
+    }
+    
     func observeLatestLibraryPhoto(handler: @escaping (ImageSource?) -> ()) {
         latestLibraryPhotoProvider.observePhoto(handler: handler)
     }
@@ -44,7 +61,7 @@ final class NewCameraInteractorImpl: NewCameraInteractor {
     }
     
     func takePhoto(completion: @escaping (PhotoLibraryItem?) -> ()) {
-        cameraService.takePhotoToPhotoLibrary(completion: completion)
+        cameraService.takePhotoToPhotoLibrary(croppedToRatio: 4.0 / 3.0, completion: completion)
     }
     
     func canAddItems() -> Bool {

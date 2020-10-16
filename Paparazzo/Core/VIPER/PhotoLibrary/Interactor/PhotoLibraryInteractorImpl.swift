@@ -70,7 +70,7 @@ final class PhotoLibraryInteractorImpl: PhotoLibraryInteractor {
     }
     
     func deselectItem(_ item: PhotoLibraryItem) -> PhotoLibraryItemSelectionState {
-        if let index = selectedItems.index(of: item) {
+        if let index = selectedItems.firstIndex(of: item) {
             selectedItems.remove(at: index)
         }
         return selectionState()

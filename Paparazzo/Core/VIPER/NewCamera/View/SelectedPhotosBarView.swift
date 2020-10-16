@@ -29,12 +29,15 @@ final class SelectedPhotosBarView: UIView {
         lastPhotoThumbnailView.contentMode = .scaleAspectFill
         lastPhotoThumbnailView.clipsToBounds = true
         lastPhotoThumbnailView.layer.cornerRadius = 5
+        lastPhotoThumbnailView.accessibilityIdentifier = "lastPhotoThumbnailView"
         
         penultimatePhotoThumbnailView.contentMode = .scaleAspectFill
         penultimatePhotoThumbnailView.clipsToBounds = true
         penultimatePhotoThumbnailView.alpha = 0.26
         penultimatePhotoThumbnailView.layer.cornerRadius = 5
+        penultimatePhotoThumbnailView.accessibilityIdentifier = "penultimatePhotoThumbnailView"
         
+        button.accessibilityIdentifier = AccessibilityId.doneButton.rawValue
         button.titleEdgeInsets = UIEdgeInsets(top: 10, left: 24, bottom: 11, right: 24)
         button.layer.backgroundColor = UIColor(red: 0, green: 0.67, blue: 1, alpha: 1).cgColor
         button.layer.cornerRadius = 6
@@ -74,9 +77,14 @@ final class SelectedPhotosBarView: UIView {
     }
     
     func setTheme(_ theme: NewCameraUITheme) {
+        backgroundColor = theme.newCameraSelectedPhotosBarBackgroundColor
+        label.textColor = theme.newCameraPhotosCountColor
         label.font = theme.newCameraPhotosCountFont
         placeholderLabel.font = theme.newCameraPhotosCountPlaceholderFont
+        placeholderLabel.textColor = theme.newCameraPhotosCountPlaceholderColor
         button.titleLabel?.font = theme.newCameraDoneButtonFont
+        button.setTitleColor(theme.newCameraSelectedPhotosBarButtonTitleColorNormal, for: .normal)
+        button.backgroundColor = theme.newCameraSelectedPhotosBarButtonBackgroundColor
     }
     
     func setDoneButtonTitle(_ title: String) {

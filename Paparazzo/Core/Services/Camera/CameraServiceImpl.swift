@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreGraphics
 import ImageIO
 import ImageSource
 import Photos
@@ -8,7 +9,7 @@ public enum CameraType {
     case front
 }
 
-final class CameraServiceImpl: CameraService {
+public final class CameraServiceImpl: CameraService {
     
     // MARK: - Private types and properties
     
@@ -26,11 +27,9 @@ final class CameraServiceImpl: CameraService {
     
     private var activeCameraType: CameraType
 
-    var isMetalEnabled: Bool = false
-
     // MARK: - Init
     
-    init(
+    public init(
         initialActiveCameraType: CameraType,
         imageStorage: ImageStorage)
     {
@@ -45,7 +44,7 @@ final class CameraServiceImpl: CameraService {
         self.activeCameraType = initialActiveCameraType
     }
     
-    func getCaptureSession(completion: @escaping (AVCaptureSession?) -> ()) {
+    public func getCaptureSession(completion: @escaping (AVCaptureSession?) -> ()) {
         
         func callCompletionOnMainQueue(with session: AVCaptureSession?) {
             DispatchQueue.main.async {
@@ -84,12 +83,16 @@ final class CameraServiceImpl: CameraService {
                     
                 case .restricted, .denied:
                     callCompletionOnMainQueue(with: nil)
+                    
+                @unknown default:
+                    assertionFailure("Unknown authorization status")
+                    callCompletionOnMainQueue(with: nil)
                 }
             }
         }
     }
     
-    func getOutputOrientation(completion: @escaping (ExifOrientation) -> ()) {
+    public func getOutputOrientation(completion: @escaping (ExifOrientation) -> ()) {
         completion(outputOrientationForCamera(activeCamera))
     }
     
@@ -177,7 +180,7 @@ final class CameraServiceImpl: CameraService {
     
     // MARK: - CameraService
     
-    func setCaptureSessionRunning(_ needsRunning: Bool) {
+    public func setCaptureSessionRunning(_ needsRunning: Bool) {
         captureSessionSetupQueue.async {
             if needsRunning {
                 self.captureSession?.startRunning()
@@ -187,7 +190,7 @@ final class CameraServiceImpl: CameraService {
         }
     }
     
-    func focusOnPoint(_ focusPoint: CGPoint) -> Bool {
+    public func focusOnPoint(_ focusPoint: CGPoint) -> Bool {
         guard let activeCamera = self.activeCamera,
             activeCamera.isFocusPointOfInterestSupported || activeCamera.isExposurePointOfInterestSupported else {
             return false
@@ -216,11 +219,11 @@ final class CameraServiceImpl: CameraService {
         }
     }
     
-    func canToggleCamera(completion: @escaping (Bool) -> ()) {
+    public func canToggleCamera(completion: @escaping (Bool) -> ()) {
         completion(frontCamera != nil && backCamera != nil)
     }
     
-    func toggleCamera(completion: @escaping (_ newOutputOrientation: ExifOrientation) -> ()) {
+    public func toggleCamera(completion: @escaping (_ newOutputOrientation: ExifOrientation) -> ()) {
         guard let captureSession = captureSession else { return }
         
         do {
@@ -235,8 +238,7 @@ final class CameraServiceImpl: CameraService {
             
             try captureSession.configure {
                 
-                let currentInputs = captureSession.inputs as? [AVCaptureInput]
-                currentInputs?.forEach { captureSession.removeInput($0) }
+                captureSession.inputs.forEach { captureSession.removeInput($0) }
                 
                 // Always reset preset before testing canAddInput because preset will cause it to return NO
                 captureSession.sessionPreset = .high
@@ -261,11 +263,11 @@ final class CameraServiceImpl: CameraService {
         completion(outputOrientationForCamera(activeCamera))
     }
     
-    var isFlashAvailable: Bool {
+    public var isFlashAvailable: Bool {
         return backCamera?.isFlashAvailable == true
     }
     
-    var isFlashEnabled: Bool {
+    public var isFlashEnabled: Bool {
         return backCamera?.flashMode == .on
     }
     
@@ -282,7 +284,7 @@ final class CameraServiceImpl: CameraService {
         }
     }
     
-    func setFlashEnabled(_ enabled: Bool) -> Bool {
+    public func setFlashEnabled(_ enabled: Bool) -> Bool {
         
         guard let camera = backCamera else { return false }
         
@@ -304,7 +306,7 @@ final class CameraServiceImpl: CameraService {
         }
     }
     
-    func takePhoto(completion: @escaping (PhotoFromCamera?) -> ()) {
+    public func takePhoto(completion: @escaping (PhotoFromCamera?) -> ()) {
         guard let output = output, let connection = videoOutputConnection() else {
             return completion(nil)
         }
@@ -324,8 +326,10 @@ final class CameraServiceImpl: CameraService {
         }
     }
     
-    func takePhotoToPhotoLibrary(completion callersCompletion: @escaping (PhotoLibraryItem?) -> ()) {
-        
+    public func takePhotoToPhotoLibrary(
+        croppedToRatio cropRatio: CGFloat?,
+        completion callersCompletion: @escaping (PhotoLibraryItem?) -> ())
+    {
         func completion(_ mediaPickerItem: PhotoLibraryItem?) {
             dispatch_to_main_queue {
                 callersCompletion(mediaPickerItem)
@@ -340,16 +344,20 @@ final class CameraServiceImpl: CameraService {
             connection.videoOrientation = avOrientationForCurrentDeviceOrientation()
         }
         
-        output.captureStillImageAsynchronously(from: connection) { [weak self] sampleBuffer, error in
+        output.captureStillImageAsynchronously(from: connection) { sampleBuffer, error in
             DispatchQueue.global(qos: .userInitiated).async {
                 
-                guard let imageData =
+                guard var imageData =
                     sampleBuffer.flatMap({ AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation($0) })
                     else {
                         return completion(nil)
                     }
                 
-                PHPhotoLibrary.requestAuthorization { status in
+                if let cropRatio = cropRatio {
+                    imageData = self.dataForImage(croppedTo: cropRatio, uncroppedImageData: imageData)
+                }
+                
+                PHPhotoLibrary.requestReadWriteAuthorization { status in
                     guard status == .authorized else {
                         return completion(nil)
                     }
@@ -376,6 +384,33 @@ final class CameraServiceImpl: CameraService {
                     })
                 }
             }
+        }
+    }
+    
+    private func dataForImage(croppedTo cropRatio: CGFloat, uncroppedImageData: Data) -> Data {
+        
+        guard let uiImage = UIImage(data: uncroppedImageData), let cgImage = uiImage.cgImage else {
+            return uncroppedImageData
+        }
+        
+        let sourceHeight = CGFloat(cgImage.width)
+        let targetWidth = CGFloat(cgImage.height)
+        let targetHeight = targetWidth / cropRatio
+        
+        let cropRect = CGRect(
+            x: (sourceHeight - targetHeight) / 2,
+            y: 0,
+            width: targetHeight,
+            height: targetWidth
+        )
+        
+        if targetHeight < sourceHeight,
+            let croppedImage = cgImage.cropping(to: cropRect),
+            let croppedImageData = UIImage(cgImage: croppedImage, scale: uiImage.scale, orientation: .right).jpegData(compressionQuality: 1)
+        {
+            return croppedImageData
+        } else {
+            return uncroppedImageData
         }
     }
     

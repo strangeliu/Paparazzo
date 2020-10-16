@@ -1,11 +1,10 @@
 import AVFoundation
 import ImageSource
 
-protocol CameraService: class {
+public protocol CameraService: class {
     
     var isFlashAvailable: Bool { get }
     var isFlashEnabled: Bool { get }
-    var isMetalEnabled: Bool { get set }
     
     func getCaptureSession(completion: @escaping (AVCaptureSession?) -> ())
     func getOutputOrientation(completion: @escaping (ExifOrientation) -> ())
@@ -14,7 +13,7 @@ protocol CameraService: class {
     func setFlashEnabled(_: Bool) -> Bool
     
     func takePhoto(completion: @escaping (PhotoFromCamera?) -> ())
-    func takePhotoToPhotoLibrary(completion: @escaping (PhotoLibraryItem?) -> ())
+    func takePhotoToPhotoLibrary(croppedToRatio: CGFloat?, completion: @escaping (PhotoLibraryItem?) -> ())
     
     func setCaptureSessionRunning(_: Bool)
     

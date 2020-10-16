@@ -25,9 +25,7 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
         canRotate: Bool)
     {
         self.mediaPickerData = mediaPickerData
-        self.selectedPhotosStorage = SelectedImageStorage(
-            images: mediaPickerData.items.map { PhotoLibraryItem(image: $0.image) }
-        )
+        self.selectedPhotosStorage = SelectedImageStorage(images: mediaPickerData.items)
         self.photoLibraryItemsService = photoLibraryItemsService
         self.cameraService = cameraService
         self.deviceOrientationService = deviceOrientationService
@@ -38,15 +36,15 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
     let selectedPhotosStorage: SelectedImageStorage
     private(set) var currentAlbum: PhotoLibraryAlbum?
     
-    var selectedItems: [PhotoLibraryItem] {
+    var selectedItems: [MediaPickerItem] {
         return selectedPhotosStorage.images
     }
     
-    private var selectedPhotos: [PhotoLibraryItem] {
+    private var selectedPhotos: [MediaPickerItem] {
         return selectedItems.filter({ !$0.isVideo })
     }
     
-    private var selectedVideos: [PhotoLibraryItem] {
+    private var selectedVideos: [MediaPickerItem] {
         return selectedItems.filter({ $0.isVideo })
     }
     
@@ -72,8 +70,7 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
                     completion(captureSession.flatMap {
                         CameraOutputParameters(
                             captureSession: $0,
-                            orientation: orientation,
-                            isMetalEnabled: cameraService.isMetalEnabled
+                            orientation: orientation
                         )
                     })
                 }
@@ -99,18 +96,22 @@ final class PhotoLibraryV2InteractorImpl: PhotoLibraryV2Interactor {
         onAlbumEvent = handler
     }
     
-    func isSelected(_ item: PhotoLibraryItem) -> Bool {
+    func isSelected(_ item: MediaPickerItem) -> Bool {
         return selectedItems.contains(item)
     }
     
-    func selectItem(_ item: PhotoLibraryItem) -> PhotoLibraryItemSelectionState {
+    func selectItem(_ item: MediaPickerItem) -> PhotoLibraryItemSelectionState {
         if canSelectMoreItems() {
             selectedPhotosStorage.addItem(item)
         }
         return selectionState()
     }
     
-    func deselectItem(_ item: PhotoLibraryItem) -> PhotoLibraryItemSelectionState {
+    func replaceSelectedItem(at index: Int, with item: MediaPickerItem) {
+        selectedPhotosStorage.replaceItem(at: index, with: item)
+    }
+    
+    func deselectItem(_ item: MediaPickerItem) -> PhotoLibraryItemSelectionState {
         selectedPhotosStorage.removeItem(item)
         return selectionState()
     }

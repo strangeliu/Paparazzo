@@ -43,6 +43,9 @@ final class NewCameraPresenter:
         view?.setDoneButtonTitle(localized("Done"))
         view?.setPlaceholderText(localized("Select at least one photo"))
         view?.setHintText(localized("Place the object inside the frame and take a photo"))
+        view?.setAccessDeniedTitle(localized("To take photo"))
+        view?.setAccessDeniedMessage(localized("Allow %@ to use your camera", appName()))
+        view?.setAccessDeniedButtonTitle(localized("Allow access to camera"))
         
         view?.onCloseButtonTap = { [weak self] in
             guard let strongSelf = self else { return }
@@ -61,7 +64,7 @@ final class NewCameraPresenter:
             else { return }
             
             let data = strongSelf.interactor.mediaPickerData
-                .bySettingPhotoLibraryItems(selectedItems)
+                .bySettingMediaPickerItems(selectedItems)
                 .bySelectingLastItem()
             
             self?.router.showMediaPicker(
@@ -90,9 +93,9 @@ final class NewCameraPresenter:
             self?.view?.animateFlash()
             
             self?.interactor.takePhoto { photo in
-                guard let photo = photo, let strongSelf = self else { return }
+                guard let photo = photo else { return }
                 
-                self?.interactor.selectedImagesStorage.addItem(photo)
+                self?.interactor.selectedImagesStorage.addItem(MediaPickerItem(photo))
                 self?.adjustCaptureButtonAvailability()
                 
                 self?.view?.animateCapturedPhoto(photo.image) { finalizeAnimation in
@@ -103,15 +106,24 @@ final class NewCameraPresenter:
             }
         }
         
-        bindSelectedPhotosBarAdjustmentToViewControllerLifecycle()
-        adjustCaptureButtonAvailability()
+        view?.onAccessDeniedButtonTap = {
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.openURL(url)
+            }
+        }
+        
+        bindAdjustmentsToViewControllerLifecycle()
         
         interactor.observeLatestLibraryPhoto { [weak self] imageSource in
             self?.view?.setLatestPhotoLibraryItemImage(imageSource)
         }
+        
+        interactor.observeCameraAuthorizationStatus { [weak self] accessGranted in
+            self?.view?.setAccessDeniedViewVisible(!accessGranted)
+        }
     }
-    
-    private func bindSelectedPhotosBarAdjustmentToViewControllerLifecycle() {
+        
+    private func bindAdjustmentsToViewControllerLifecycle() {
         var didDisappear = false
         var viewDidLayoutSubviewsBefore = false
         
@@ -120,6 +132,7 @@ final class NewCameraPresenter:
             
             DispatchQueue.main.async {
                 self.adjustSelectedPhotosBar {}
+                self.adjustCaptureButtonAvailability()
             }
         }
         
@@ -155,5 +168,9 @@ final class NewCameraPresenter:
     
     private func adjustCaptureButtonAvailability() {
         view?.setCaptureButtonState(interactor.canAddItems() ? .enabled : .disabled)
+    }
+    
+    private func appName() -> String {
+        return Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String ?? ""
     }
 }
